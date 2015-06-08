@@ -6,21 +6,21 @@ use warnings;
 use IO::Handle qw/autoflush/;
 use Scalar::Util 'weaken';
 use AnyEvent::Handle;
-use Data::Dumper;
 use File::Path;
 use File::Spec;
+use Data::Dumper;
 
 =head1 NAME
 
-Test::Tarantool16 - The Swiss army knife for tests of Tarantool related Perl and lua code.
+Test::Tarantool16 - The Swiss army knife for tests of Tarantool 1.6 related Perl and lua code.
 
 =head1 VERSION
 
-Version 0.03
+Version 0.01
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.01';
 our $Count = 0;
 our %Schedule;
 
@@ -36,14 +36,6 @@ our %Schedule;
         my $n = $_;
         Test::Tarantool16->new(
             host => '127.17.3.0',
-            spaces => 'space[0] = {
-                           enabled = 1,
-                           index = [ {
-                               type = HASH,
-                               unique = 1,
-                               key_field = [ { fieldno = 0, type = STR }, ],
-                           }, ],
-                       }',
             initlua => do {
                           open my $f, '<', 'init.lua';
                           local $/ = undef;
@@ -93,14 +85,14 @@ our %Schedule;
 
 =head2 new option => value,...
 
-Create new Tarantool instance. Every call of new method increase counter, below
+Create new Test::Tarantool16 instance. Every call of new method increase counter, below
 called as I<tarantool number> or I<tn>.
 
 =over 4
 
 =item root => $path
 
-Tarantool work directory. Default is I<./tnt_E<lt>10_random_lowercase_lettersE<gt>>
+Tarantool 1.6 work directory. Default is I<./tnt_E<lt>10_random_lowercase_lettersE<gt>>
 
 =item arena => $size
 
@@ -109,10 +101,6 @@ The maximal size of tarantool arena in Gb. Default is I<0.1>
 =item cleanup => $bool
 
 Remove tarantool work directory after garbage collection. Default is I<1>
-
-=item spaces => $string
-
-Tarantool spaces description. This is only one B<required> argument.
 
 =item initlua => $content
 
@@ -124,19 +112,7 @@ Address bind to. Default: I<127.0.0.1>
 
 =item port => $port
 
-Primary port number, base for s_port, a_port and r_port. Default is I<6603+E<lt>tnE<gt>*4>
-
-=item s_port => $port
-
-Read-only (secondary) port. Default is I<port+1>
-
-=item a_port => $port
-
-Admin port. Default is I<port+2>
-
-=item r_port => $port
-
-Replication port. Default is I<port+3>
+Primary port number. Default is I<3301+E<lt>tnE<gt>*4>
 
 =item title => $title
 
@@ -175,7 +151,6 @@ An subroutine called on a unexpected tarantool termination.
 
 sub new {
 	my $class = shift; $class = (ref $class)? ref $class : $class;
-	# FIXME: must die if no spaces given
 	my $self = {
 		arena => 0.1,
 		cleanup => 1,
@@ -192,20 +167,13 @@ sub new {
 		wal_mode => 'none',
 		@_,
 	}; $Count++;
-	# $self->{p_port} = $self->{port};
-	# $self->{s_port} ||= $self->{port} + 1;
-	# $self->{a_port} ||= $self->{port} + 2;
-	# $self->{r_port} ||= $self->{port} + 3;
 
 	bless $self, $class;
 
 	weaken ($Schedule{$self} = $self);
 
-	mkdir($self->{root}); # FIXME: need error hadling
-
-	$self->_initlua();
+	mkdir($self->{root}) or "Couldn't create folder $self->{root}: $!";
 	$self->_config();
-	# $self->_init_storage();
 	$self;
 }
 
@@ -217,7 +185,7 @@ Run tarantool instance.
 
 =item timeout => $timeout
 
-If not After $timeout seconds tarantool will been kelled by the KILL signal if
+If not After $timeout seconds tarantool will been killed by the KILL signal if
 not started.
 
 =back
@@ -242,7 +210,6 @@ sub start {
 	if ($pid) {
 		close($_) for ($cr, $cw);
 		$self->{pid} = $pid;
-		warn Dumper $self->{pid};
 		$self->{rpipe} = $pr;
 		$self->{wpipe} = $pw;
 		$self->{nanny} = AnyEvent->child(
@@ -274,7 +241,6 @@ sub start {
 				}
 				open my $fh, "<", "/proc/$self->{pid}/cmdline" or
 					do { $self->{start_timer} = undef; return $cb->(0, "Tarantool died"); };
-				# my $status = $self->{replication_source} ? "replica" : "primary"; # TODO: ???
 				my $status = "running";
 				if (<$fh> =~ /$status/) {
 					$self->{start_timer} = undef;
@@ -294,9 +260,7 @@ sub start {
 		open(STDIN, "<&", $cr) or die "Could not dup filehandle: $!";
 		open(STDOUT, ">&", $cw) or die "Could not dup filehandle: $!";
 		open(STDERR, ">&", $cw) or die "Could not dup filehandle: $!";
-		# exec("tarantool /home/vagrant/EV-Tarantool1.6/provision/evtnt.lua");
 		my $file = File::Spec->rel2abs("./evtnt.lua");
-		warn Dumper $file;
 		exec("tarantool $file");
 		die "exec: $!";
 	}
@@ -376,11 +340,11 @@ sub resume {
 	kill CONT => $self->{pid};
 }
 
-=head2 ro $cb->($status, $reason)
+# =head2 ro $cb->($status, $reason)
 
-Switch tarantool instance to read only mode.
+# Switch tarantool instance to read only mode.
 
-=cut
+# =cut
 
 # sub ro {
 # 	my ($self, $cb) = @_;
@@ -392,11 +356,11 @@ Switch tarantool instance to read only mode.
 # 	});
 # }
 
-=head2 rw $cb->($status, $reason)
+# =head2 rw $cb->($status, $reason)
 
-Switch tarantool instance to write mode.
+# Switch tarantool instance to write mode.
 
-=cut
+# =cut
 
 # sub rw {
 # 	my ($self, $cb) = @_;
@@ -408,11 +372,11 @@ Switch tarantool instance to write mode.
 # 	});
 # }
 
-=head2 admin_cmd $cmd, $cb->($status, $response_or_reason)
+# =head2 admin_cmd $cmd, $cb->($status, $response_or_reason)
 
-Exec a command via the amind port.
+# Exec a command via the amind port.
 
-=cut
+# =cut
 
 # sub admin_cmd {
 # 	my ($self, $cmd, $cb) = @_;
@@ -456,9 +420,9 @@ sub times {
 	map { $_ / 100 } (split " ", <$f>)[13..14];
 }
 
-=head2 sync_start sync_stop sync_ro sync_rw sync_admin_cmd
+=head2 sync_start sync_stop
 
-Aliases for start, stop, ro, rw, admin_cmd respectively, arguments a similar,
+Aliases for start, stop respectively, arguments a similar,
 but cb not passed.
 
 =cut
@@ -485,51 +449,12 @@ sub _config {
 	syswrite $f, $config;
 }
 
-# sub _spaces {
-# 	my $self = shift;
-# 	return $self->{spaces} unless ref $self->{spaces};
-# 	die 'TODO';
-# }
-
-sub _initlua {
-	my $self = shift;
-	# die 'TODO' if ref $self->{initlua};
-	# open my $f, '<', $self->{initlua} or die "Could not open init.lua : $!";
-	# open my $f, '>', $self->{root} . '/' . 'init.lua' or die "Could not create init.lua : $!";;
-	# sysread $f, $self->{initlua}, -f $f;
-
-	$self->{initlua} = do {
-		local $/ = undef;
-	    open my $f, "<", $self->{initlua}
-	        or die "could not open $self->{initlua}: $!";
-	    my $d = <$f>;
-	    close $f;
-	    $d;
-	};
-}
-
-# sub _init_storage() {
-# 	my $self = shift;
-# 	open my $f, '>', $self->{root} . '/' . '00000000000000000001.snap' or die "Could not create tnt snap: $!";
-# 	syswrite $f, "\x53\x4e\x41\x50\x0a\x30\x2e\x31\x31\x0a\x0a\x1e\xab\xad\x10";
-# 	if ($self->{snapshot} =~ m{(?:^|/)([0-9]{20}\.snap)$}) {
-# 		use Cwd;
-# 		symlink Cwd::abs_path($self->{snapshot}), $self->{root} . '/' . $1;
-# 	}
-# }
-
 sub DESTROY {
 	my $self = shift;
 	return unless $Schedule{$self};
 	kill TERM => $self->{pid} if $self->{pid};
 	if ($self->{cleanup}) {
 		rmtree($self->{root}) or warn "Couldn't remove folder $self->{root}: $!";
-		# opendir my $root, $self->{root} or die "opendir: $!";
-		# my @unlink = map { (/^[^.]/ && -f "$self->{root}/$_") ? "$self->{root}/$_" : () } readdir($root);
-		# local $, = ' ';
-		# unlink @unlink or
-		# 	warn "Could not unlink files (@unlink): $!";
-		# rmdir($self->{root}) or warn "Couldn't remove folder $self->{root}: $!";
 	}
 	delete $Schedule{$self};
 	warn "$self->{title} destroyed\n";
@@ -544,11 +469,11 @@ END {
 =head1 AUTHOR
 
 Anton Reznikov, C<< <anton.n.reznikov at gmail.com> >>
+igorcoding, C<< <igorcoding at gmail.com> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<< <a.reznikov at corp.mail.ru> >>
-
+Please report any bugs or feature requests in L<https://github.com/igorcoding/Test-Tarantool16/issues>
 
 
 =head1 SUPPORT
@@ -559,11 +484,11 @@ You can find documentation for this module with the perldoc command.
 
 =head1 ACKNOWLEDGEMENTS
 
-    Mons Anderson    - The original idia of the module.
+    Mons Anderson    - The original idea of the module.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2014 Anton Reznikov.
+Copyright 2015 igorcoding.
 
 This program is released under the following license: GPL
 
