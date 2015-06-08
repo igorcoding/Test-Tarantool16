@@ -8,6 +8,9 @@ unless ($^O eq 'linux') {
     exit 0;
 }
 
+my $preop =
+    'perldoc -uT $(VERSION_FROM) | tee $(DISTVNAME)/README.pod > README.pod;' .
+    'pod2text README.pod | tee $(DISTVNAME)/README > README';
 
 WriteMakefile(
     NAME              => 'Test::Tarantool16',
@@ -24,6 +27,6 @@ WriteMakefile(
     BUILD_REQUIRES => {
         'Test::More' => 0,
     },
-    dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
+    dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', PREOP => $preop},
     clean => { FILES => 'Test-Tarantool-*' },
 );

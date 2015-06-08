@@ -1,6 +1,8 @@
 Changes
+lib/Test/Tarantool16.pm
 Makefile.PL
 MANIFEST
+MANIFEST.SKIP
 README
+README.pod
 t/Test-Tarantool16.t
-lib/Test/Tarantool16.pm

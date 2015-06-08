@@ -1,0 +1,226 @@
+=head1 NAME
+
+Test::Tarantool16 - The Swiss army knife for tests of Tarantool 1.6 related Perl and lua code.
+
+=head1 VERSION
+
+Version 0.01
+
+
+=cut
+
+=head1 SYNOPSIS
+
+    use Test::Tarantool16;
+    use AnyEvent;
+
+    # Clear data and exit on Ctrl+C.
+    my $w = AnyEvent->signal (signal => "INT", cb => sub { exit 0 });
+
+    my @shards = map {
+        my $n = $_;
+        Test::Tarantool16->new(
+            host => '127.17.3.0',
+            initlua => do {
+                          open my $f, '<', 'init.lua';
+                          local $/ = undef;
+                          <$f> or "";
+                       },
+            on_die => sub { warn "Shard #$n unexpectedly terminated\n"; exit; },
+        );
+    } 1..4;
+
+    my @cluster = map { [ $_->{host}, $_->{p_port} ] } @shards;
+
+    {
+        my $cv = AE::cv();
+        $cv->begin for (@shards);
+        $_->start($cv) for (@shards);
+        $cv->recv;
+    }
+
+    {
+        $_->sync_start() for (@shards);
+    }
+
+    {
+        my ($status, $reason) = $shards[0]->sync_ro();
+        die $reason unless $status;
+        print (($shards[0]->sync_admin_cmd("show info"))[1]);
+    }
+
+    # Some test case here
+
+    $shards[1]->pause();
+
+    # Some test case here
+
+    $shards[1]->resume();
+
+    {
+        my ($status, $reason) = $shards[0]->sync_rw();
+        die $reason unless $status;
+        print (($shards[0]->sync_admin_cmd("show info"))[1]);
+    }
+
+    # stop tarantools and clear work directoies
+    @shards = ();
+
+=head1 SUBROUTINES/METHODS
+
+=head2 new option => value,...
+
+Create new Test::Tarantool16 instance. Every call of new method increase counter, below
+called as I<tarantool number> or I<tn>.
+
+=over 4
+
+=item root => $path
+
+Tarantool 1.6 work directory. Default is I<./tnt_E<lt>10_random_lowercase_lettersE<gt>>
+
+=item arena => $size
+
+The maximal size of tarantool arena in Gb. Default is I<0.1>
+
+=item cleanup => $bool
+
+Remove tarantool work directory after garbage collection. Default is I<1>
+
+=item initlua => $content
+
+Content of init.lua file. Be default an empty file created.
+
+=item host => $address
+
+Address bind to. Default: I<127.0.0.1>
+
+=item port => $port
+
+Primary port number. Default is I<3301+E<lt>tnE<gt>*4>
+
+=item title => $title
+
+Part of process name (custom_proc_title) Default is I<"yatE<lt>tnE<lt>">
+
+=item wal_mode => $mode
+
+The WAL write mode. See the desctiption of wal_mode tarantool variable. Default
+is I<none>. Look more about wal_mode in tarantool documentation.
+
+=item log_level => $number
+
+Tarantool log level. Default is I<5>
+
+=item snapshot => $path
+
+Path to some snapshot. If given the symbolic link to it will been created in
+tarantool work directory.
+
+=item replication_source => $string
+
+If given the server is considered to be a Tarantool replica.
+
+=item logger => $sub
+
+An subroutine called at every time, when tarantool write some thing in a log.
+The writed text passed as the first argument. Default is warn.
+
+=item on_die => $sub
+
+An subroutine called on a unexpected tarantool termination.
+
+=back
+
+
+=cut
+
+=head2 start option => $value, $cb->($status, $reason)
+
+Run tarantool instance.
+
+=over 4
+
+=item timeout => $timeout
+
+If not After $timeout seconds tarantool will been killed by the KILL signal if
+not started.
+
+=back
+
+
+=cut
+
+=head2 stop option => $value, $cb->($status, $reason)
+
+stop tarantool instance
+
+=over 4
+
+=item timeout => $timeout
+
+After $timeout seconds tarantool will been kelled by the KILL signal
+
+=back
+
+
+=cut
+
+=head2 pause
+
+Send STOP signal to instance
+
+
+=cut
+
+=head2 resume
+
+Send CONT signal to instance
+
+
+=cut
+
+=head2 times
+
+Return values of utime and stime from /proc/[pid]/stat, converted to seconds
+
+
+=cut
+
+=head2 sync_start sync_stop
+
+Aliases for start, stop respectively, arguments a similar,
+but cb not passed.
+
+
+=cut
+
+=head1 AUTHOR
+
+Anton Reznikov, C<< <anton.n.reznikov at gmail.com> >>
+igorcoding, C<< <igorcoding at gmail.com> >>
+
+=head1 BUGS
+
+Please report any bugs or feature requests in L<https://github.com/igorcoding/Test-Tarantool16/issues>
+
+
+=head1 SUPPORT
+
+You can find documentation for this module with the perldoc command.
+
+    perldoc Test::Tarantool16
+
+=head1 ACKNOWLEDGEMENTS
+
+    Mons Anderson    - The original idea of the module.
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright 2015 igorcoding.
+
+This program is released under the following license: GPL
+
+
+=cut
+
