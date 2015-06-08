@@ -172,7 +172,7 @@ sub new {
 
 	weaken ($Schedule{$self} = $self);
 
-	mkdir($self->{root}) or "Couldn't create folder $self->{root}: $!";
+	mkdir($self->{root}) or die "Couldn't create folder $self->{root}: $!";
 	$self->_config();
 	$self;
 }
