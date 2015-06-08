@@ -1,0 +1,23 @@
+---
+abstract: 'The Swiss army knife for tests of Tarantool 1.6 related Perl and lua code.'
+author:
+  - 'Anton Reznikov <a.reznikov@corp.mail.ru>'
+  - 'igorcoding <igorcoding@gmail.com>'
+build_requires:
+  Test::More: 0
+configure_requires:
+  ExtUtils::MakeMaker: 0
+dynamic_config: 0
+generated_by: 'ExtUtils::MakeMaker version 6.82, CPAN::Meta::Converter version 2.132830'
+license: open_source
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Test-Tarantool16
+no_index:
+  directory:
+    - t
+    - inc
+requires:
+  AnyEvent: 0
+version: 0.01
