@@ -3,6 +3,8 @@ lib/Test/Tarantool16.pm
 Makefile.PL
 MANIFEST
 MANIFEST.SKIP
+META.json
+META.yml
 README
 README.pod
 t/Test-Tarantool16.t

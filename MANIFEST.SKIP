@@ -31,4 +31,5 @@ _bak$
 ^dist/
 ^makeall\.sh$
 ^tmp/
-^Test-Tarantool-.*
+^Test-Tarantool16-.*
+.gitignore
