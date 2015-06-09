@@ -99,6 +99,10 @@ Address bind to. Default: I<127.0.0.1>
 
 Primary port number. Default is I<3301+E<lt>tnE<gt>*4>
 
+=item admin_port => $admin_port
+
+Admin port number. Default is C<$port * 10>
+
 =item title => $title
 
 Part of process name (custom_proc_title) Default is I<"yatE<lt>tnE<lt>">
@@ -176,6 +180,13 @@ Send STOP signal to instance
 =head2 resume
 
 Send CONT signal to instance
+
+
+=cut
+
+=head2 admin_cmd $cmd, $cb->($status, $response_or_reason)
+
+Exec a command via the admin port.
 
 
 =cut

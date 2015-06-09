@@ -86,6 +86,9 @@ SUBROUTINES/METHODS
     port => $port
         Primary port number. Default is *3301+<tn>*4*
 
+    admin_port => $admin_port
+        Admin port number. Default is "$port * 10"
+
     title => $title
         Part of process name (custom_proc_title) Default is *"yat<tn<"*
 
@@ -130,6 +133,9 @@ SUBROUTINES/METHODS
 
   resume
     Send CONT signal to instance
+
+  admin_cmd $cmd, $cb->($status, $response_or_reason)
+    Exec a command via the admin port.
 
   times
     Return values of utime and stime from /proc/[pid]/stat, converted to

@@ -114,6 +114,10 @@ Address bind to. Default: I<127.0.0.1>
 
 Primary port number. Default is I<3301+E<lt>tnE<gt>*4>
 
+=item admin_port => $admin_port
+
+Admin port number. Default is C<$port * 10>
+
 =item title => $title
 
 Part of process name (custom_proc_title) Default is I<"yatE<lt>tnE<lt>">
@@ -160,6 +164,7 @@ sub new {
 		logger => sub { warn $_[0] },
 		on_die => sub { warn "Broken pipe, child is dead?"; },
 		port => 3301 + $Count, # FIXME: auto fitting needed
+		admin_port => (3301 + $Count) * 10,
 		replication_source => '',
 		root => join("", ("tnt_", map { chr(97 + int(rand(26))) } 1..10)),
 		snapshot => '',
@@ -372,40 +377,45 @@ sub resume {
 # 	});
 # }
 
-# =head2 admin_cmd $cmd, $cb->($status, $response_or_reason)
+=head2 admin_cmd $cmd, $cb->($status, $response_or_reason)
 
-# Exec a command via the amind port.
+Exec a command via the admin port.
 
-# =cut
+=cut
 
-# sub admin_cmd {
-# 	my ($self, $cmd, $cb) = @_;
-# 	return if ($self->{afh});
-# 	$self->{afh} = AnyEvent::Handle->new (
-# 		connect => [ $self->{host}, $self->{a_port} ],
-# 		on_connect => sub {
-# 			$_[0]->push_write($cmd . "\n");
-# 		},
-# 		on_connect_error => sub {
-# 			warn "Connection error: $_[1]";
-# 			$_[0]->on_read(undef);
-# 			$_[0]->destroy();
-# 			delete $self->{afh};
-# 			$cb->(0, $_[1]);
-# 		},
-# 		on_error => sub {
-# 			$_[0]->on_read(undef);
-# 			$_[0]->destroy();
-# 			delete $self->{afh};
-# 			$cb->(0, $_[2])
-# 		},
-# 	);
-# 	$self->{afh}->push_read(regex => qr/\x0a\.\.\.\x0a/, sub {
-# 		$_[0]->destroy();
-# 		delete $self->{afh};
-# 		$cb->(1, $_[1]);
-# 	});
-# }
+sub admin_cmd {
+	my ($self, $cmd, $cb) = @_;
+	return if ($self->{afh});
+	$self->{afh} = AnyEvent::Handle->new (
+		connect => [ $self->{host}, $self->{admin_port} ],
+		on_connect => sub {
+			my $hdl = $_[0];
+			$hdl->push_read(regex => qr/Tarantool .*\n.*\n/, sub {
+				$_[0]->rbuf = '';
+				$_[0]->push_write($cmd . "\n");
+
+				$self->{afh}->push_read(regex => qr/^---\n(.*)\n?\.\.\.\n$/s, sub {
+					$_[0]->destroy();
+					delete $self->{afh};
+					$cb->(1, $1);
+				});
+			});
+		},
+		on_connect_error => sub {
+			warn "Connection error: $_[1]";
+			$_[0]->on_read(undef);
+			$_[0]->destroy();
+			delete $self->{afh};
+			$cb->(0, $_[1]);
+		},
+		on_error => sub {
+			$_[0]->on_read(undef);
+			$_[0]->destroy();
+			delete $self->{afh};
+			$cb->(0, $_[2])
+		},
+	);
+}
 
 =head2 times
 
@@ -508,5 +518,7 @@ box.cfg{
 }
 
 box.schema.user.grant('guest','read,write,execute','universe')
+
+require('console').listen('%{host}:%{admin_port}')
 
 %{{ $self->{initlua} }}
