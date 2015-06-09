@@ -4,7 +4,7 @@ Test::Tarantool16 - The Swiss army knife for tests of Tarantool 1.6 related Perl
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 
 =cut
@@ -134,6 +134,11 @@ The writed text passed as the first argument. Default is warn.
 
 An subroutine called on a unexpected tarantool termination.
 
+=item tarantool_cmd => $tarantool_cmd
+
+Command that should start tarantool instance. Parameterized with %{args}.
+All necessary arguments will be substitued into %{args}
+
 =back
 
 
@@ -198,9 +203,9 @@ Return values of utime and stime from /proc/[pid]/stat, converted to seconds
 
 =cut
 
-=head2 sync_start sync_stop
+=head2 sync_start sync_stop sync_admin_cmd
 
-Aliases for start, stop respectively, arguments a similar,
+Aliases for start, stop, admin_cmd respectively, arguments a similar,
 but cb not passed.
 
 

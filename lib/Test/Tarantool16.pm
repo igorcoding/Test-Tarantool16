@@ -16,11 +16,11 @@ Test::Tarantool16 - The Swiss army knife for tests of Tarantool 1.6 related Perl
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 our $Count = 0;
 our %Schedule;
 
@@ -149,6 +149,11 @@ The writed text passed as the first argument. Default is warn.
 
 An subroutine called on a unexpected tarantool termination.
 
+=item tarantool_cmd => $tarantool_cmd
+
+Command that should start tarantool instance. Parameterized with %{args}.
+All necessary arguments will be substitued into %{args}
+
 =back
 
 =cut
@@ -170,6 +175,7 @@ sub new {
 		snapshot => '',
 		title => "yat" . $Count,
 		wal_mode => 'none',
+		tarantool_cmd => 'tarantool %{args}',
 		@_,
 	}; $Count++;
 
@@ -266,7 +272,9 @@ sub start {
 		open(STDOUT, ">&", $cw) or die "Could not dup filehandle: $!";
 		open(STDERR, ">&", $cw) or die "Could not dup filehandle: $!";
 		my $file = File::Spec->rel2abs("./evtnt.lua");
-		exec("tarantool $file");
+		$self->{tarantool_cmd} =~ s/%\{([^{}]+)\}/$file/;
+		warn Dumper $self->{tarantool_cmd};
+		exec($self->{tarantool_cmd});
 		die "exec: $!";
 	}
 }
@@ -430,9 +438,9 @@ sub times {
 	map { $_ / 100 } (split " ", <$f>)[13..14];
 }
 
-=head2 sync_start sync_stop
+=head2 sync_start sync_stop sync_admin_cmd
 
-Aliases for start, stop respectively, arguments a similar,
+Aliases for start, stop, admin_cmd respectively, arguments a similar,
 but cb not passed.
 
 =cut

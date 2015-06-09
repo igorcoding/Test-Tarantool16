@@ -3,7 +3,7 @@ NAME
     related Perl and lua code.
 
 VERSION
-    Version 0.01
+    Version 0.02
 
 SYNOPSIS
         use Test::Tarantool16;
@@ -115,6 +115,10 @@ SUBROUTINES/METHODS
     on_die => $sub
         An subroutine called on a unexpected tarantool termination.
 
+    tarantool_cmd => $tarantool_cmd
+        Command that should start tarantool instance. Parameterized with
+        %{args}. All necessary arguments will be substitued into %{args}
+
   start option => $value, $cb->($status, $reason)
     Run tarantool instance.
 
@@ -141,9 +145,9 @@ SUBROUTINES/METHODS
     Return values of utime and stime from /proc/[pid]/stat, converted to
     seconds
 
-  sync_start sync_stop
-    Aliases for start, stop respectively, arguments a similar, but cb not
-    passed.
+  sync_start sync_stop sync_admin_cmd
+    Aliases for start, stop, admin_cmd respectively, arguments a similar,
+    but cb not passed.
 
 AUTHOR
     Anton Reznikov, "<anton.n.reznikov at gmail.com>" igorcoding,

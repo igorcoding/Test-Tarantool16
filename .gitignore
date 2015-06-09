@@ -12,3 +12,4 @@ cover_db
 Kit.pm
 *.swp
 *.src.rpm
+dist/
