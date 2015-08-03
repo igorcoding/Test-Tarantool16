@@ -9,6 +9,7 @@ use AnyEvent::Handle;
 use File::Path;
 use File::Spec;
 use Data::Dumper;
+use YAML::XS;
 
 =head1 NAME
 
@@ -16,11 +17,11 @@ Test::Tarantool16 - The Swiss army knife for tests of Tarantool 1.6 related Perl
 
 =head1 VERSION
 
-Version 0.02
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 our $Count = 0;
 our %Schedule;
 
@@ -273,7 +274,7 @@ sub start {
 		open(STDERR, ">&", $cw) or die "Could not dup filehandle: $!";
 		my $file = File::Spec->rel2abs("./evtnt.lua");
 		$self->{tarantool_cmd} =~ s/%\{([^{}]+)\}/$file/;
-		warn Dumper $self->{tarantool_cmd};
+		# warn Dumper $self->{tarantool_cmd};
 		exec($self->{tarantool_cmd});
 		die "exec: $!";
 	}
@@ -402,10 +403,11 @@ sub admin_cmd {
 				$_[0]->rbuf = '';
 				$_[0]->push_write($cmd . "\n");
 
-				$self->{afh}->push_read(regex => qr/^---\n(.*)\n?\.\.\.\n$/s, sub {
+				$self->{afh}->push_read(regex => qr/^(---\n.*\n?\.\.\.\n)$/s, sub {
 					$_[0]->destroy();
 					delete $self->{afh};
-					$cb->(1, $1);
+					my $resp = Load $1;
+					$cb->(1, $resp);
 				});
 			});
 		},

@@ -4,20 +4,21 @@ author:
   - 'Anton Reznikov <a.reznikov@corp.mail.ru>'
   - 'igorcoding <igorcoding@gmail.com>'
 build_requires:
-  Test::More: '0'
+  Test::More: 0
 configure_requires:
-  ExtUtils::MakeMaker: '0'
+  ExtUtils::MakeMaker: 0
 dynamic_config: 0
-generated_by: 'ExtUtils::MakeMaker version 7.04, CPAN::Meta::Converter version 2.143240'
+generated_by: 'ExtUtils::MakeMaker version 7.04, CPAN::Meta::Converter version 2.120351'
 license: open_source
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
-  version: '1.4'
+  version: 1.4
 name: Test-Tarantool16
 no_index:
   directory:
     - t
     - inc
 requires:
-  AnyEvent: '0'
-version: '0.02'
+  AnyEvent: 0
+  YAML::XS: 0
+version: 0.03

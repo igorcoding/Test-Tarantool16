@@ -5,7 +5,7 @@
       "igorcoding <igorcoding@gmail.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "ExtUtils::MakeMaker version 7.04, CPAN::Meta::Converter version 2.143240",
+   "generated_by" : "ExtUtils::MakeMaker version 7.04, CPAN::Meta::Converter version 2.120351",
    "license" : [
       "open_source"
    ],
@@ -33,10 +33,11 @@
       },
       "runtime" : {
          "requires" : {
-            "AnyEvent" : "0"
+            "AnyEvent" : "0",
+            "YAML::XS" : "0"
          }
       }
    },
    "release_status" : "stable",
-   "version" : "0.02"
+   "version" : "0.03"
 }

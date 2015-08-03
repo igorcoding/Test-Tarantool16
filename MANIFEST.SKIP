@@ -33,3 +33,5 @@ _bak$
 ^tmp/
 ^Test-Tarantool16-.*
 .gitignore
+
+^t/temp.pl

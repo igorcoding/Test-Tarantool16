@@ -4,7 +4,7 @@ MODULE=`perl -ne 'print($1),exit if m{version_from.+?([\w/.]+)}i' Makefile.PL`;
 perl=perl
 $perl -v
 
-mkdir dist
+rm -rf dist && mkdir dist
 rm -rf MANIFEST.bak Makefile.old MYMETA.* META.* && \
 AUTHOR=1 $perl Makefile.PL && \
 make manifest && \

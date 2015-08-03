@@ -3,7 +3,7 @@ NAME
     related Perl and lua code.
 
 VERSION
-    Version 0.02
+    Version 0.03
 
 SYNOPSIS
         use Test::Tarantool16;
