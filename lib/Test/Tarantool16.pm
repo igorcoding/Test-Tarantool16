@@ -17,11 +17,11 @@ Test::Tarantool16 - The Swiss army knife for tests of Tarantool 1.6 related Perl
 
 =head1 VERSION
 
-Version 0.03
+Version 0.031
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.031';
 our $Count = 0;
 our %Schedule;
 
@@ -249,14 +249,12 @@ sub start {
 			cb => sub {
 				unless ($self->{pid}) {
 					$self->{start_timer} = undef;
-					$cb->(0, "Process unexpectedly terminated");
+					return $cb->(0, "Process unexpectedly terminated");
 				}
-				open my $fh, "<", "/proc/$self->{pid}/cmdline" or
-					do { $self->{start_timer} = undef; return $cb->(0, "Tarantool died"); };
-				my $status = "running";
-				if (<$fh> =~ /$status/) {
+				my ($status, $message) = $self->_process_check();
+				if (defined($status) && defined($message)) {
 					$self->{start_timer} = undef;
-					$cb->(1, "OK");
+					return $cb->($status, $message);
 				}
 				unless($i > 0) {
 					kill TERM => $self->{pid};
@@ -456,6 +454,33 @@ but cb not passed.
 			$self->$method(@_, $cv);
 			return $cv->recv;
 		}
+	}
+}
+
+
+
+sub _process_check {
+	my $self = shift;
+	my $cb = pop;
+	
+	if (lc $^O eq 'linux') {
+		open my $fh, "<", "/proc/$self->{pid}/cmdline" or
+			do { return 0, "Tarantool died"; };
+		my $status = "running";
+		if (<$fh> =~ /$status/) {
+			return 1, "OK";
+		}
+		return;
+	} elsif (lc $^O eq 'macos' || lc $^O eq 'rhapsody') {
+		my $ps = system("ps -p $self->{pid} -o args=");
+		if (!$ps || $ps eq '') {
+			return 0, "Tarantool died";
+		}
+		my $status = "running";
+		if ($ps =~ /$status/) {
+			return 1, "OK";
+		}
+		return;
 	}
 }
 
