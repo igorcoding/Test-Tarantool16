@@ -17,11 +17,11 @@ Test::Tarantool16 - The Swiss army knife for tests of Tarantool 1.6 related Perl
 
 =head1 VERSION
 
-Version 0.03
+Version 0.031
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.031';
 our $Count = 0;
 our %Schedule;
 
@@ -459,6 +459,32 @@ but cb not passed.
 	}
 }
 
+
+sub _process_check {
+	my $self = shift;
+	my $cb = pop;
+	
+	if (lc $^O eq 'linux') {
+		open my $fh, "<", "/proc/$self->{pid}/cmdline" or
+			do { return 0, "Tarantool died"; };
+		my $status = "running";
+		if (<$fh> =~ /$status/) {
+			return 1, "OK";
+		}
+		return;
+	} elsif (lc $^O eq 'macos' || lc $^O eq 'rhapsody') {
+		my $ps = system("ps -p $self->{pid} -o args=");
+		warn Dumper $ps;
+		if (!$ps || $ps eq '') {
+			return 0, "Tarantool died";
+		}
+		my $status = "running";
+		if ($ps =~ /$status/) {
+			return 1, "OK";
+		}
+		return;
+	}
+}
 
 sub _config {
 	my $self = shift;
