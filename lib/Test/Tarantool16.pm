@@ -471,6 +471,7 @@ sub _process_check {
 			if ($ps =~ /$status/) {
 				return 1, "OK";
 			}
+			last;
 		}
 	}
 	return;
