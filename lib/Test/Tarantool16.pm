@@ -10,6 +10,7 @@ use File::Path;
 use File::Spec;
 use Data::Dumper;
 use YAML::XS;
+use Proc::ProcessTable;
 
 =head1 NAME
 
@@ -464,26 +465,38 @@ sub _process_check {
 	my $self = shift;
 	my $cb = pop;
 	
-	if (lc $^O eq 'linux') {
-		open my $fh, "<", "/proc/$self->{pid}/cmdline" or
-			do { return 0, "Tarantool died"; };
-		my $status = "running";
-		if (<$fh> =~ /$status/) {
-			return 1, "OK";
+	warn "FUCK YEAH";
+	my $t = Proc::ProcessTable->new();
+	my $status = "running";
+	for my $p ( @{$t->table} ){
+		if ($p->pid == $self->{pid}) {
+			my $ps = $p->cmndline;
+			if ($ps =~ /$status/) {
+				return 1, "OK";
+			}
 		}
-		return;
-	} elsif (lc $^O eq 'macos' || lc $^O eq 'rhapsody') {
-		my $ps = system("ps -p $self->{pid} -o args=");
-		warn Dumper $ps;
-		if (!$ps || $ps eq '') {
-			return 0, "Tarantool died";
-		}
-		my $status = "running";
-		if ($ps =~ /$status/) {
-			return 1, "OK";
-		}
-		return;
 	}
+	return 0, "Tarantool died";
+	# if (lc $^O eq 'linux') {
+	# 	open my $fh, "<", "/proc/$self->{pid}/cmdline" or
+	# 		do { return 0, "Tarantool died"; };
+	# 	my $status = "running";
+	# 	if (<$fh> =~ /$status/) {
+	# 		return 1, "OK";
+	# 	}
+	# 	return;
+	# } elsif (lc $^O eq 'macos' || lc $^O eq 'rhapsody') {
+	# 	my $ps = system("ps -p $self->{pid} -o args=");
+	# 	warn Dumper $ps;
+	# 	if (!$ps || $ps eq '') {
+	# 		return 0, "Tarantool died";
+	# 	}
+	# 	my $status = "running";
+	# 	if ($ps =~ /$status/) {
+	# 		return 1, "OK";
+	# 	}
+	# 	return;
+	# }
 }
 
 sub _config {

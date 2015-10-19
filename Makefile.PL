@@ -21,6 +21,7 @@ WriteMakefile(
     PREREQ_PM         => {
         'AnyEvent' => 0,
         'YAML::XS' => 0,
+        'Proc::ProcessTable' => 0,
     },
     CONFIGURE_REQUIRES => {
         'ExtUtils::MakeMaker' => 0,

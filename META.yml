@@ -20,5 +20,6 @@ no_index:
     - inc
 requires:
   AnyEvent: 0
+  Proc::ProcessTable: 0
   YAML::XS: 0
-version: 0.03
+version: 0.031
