@@ -22,4 +22,4 @@ requires:
   AnyEvent: 0
   Proc::ProcessTable: 0
   YAML::XS: 0
-version: 0.031
+version: 0.032

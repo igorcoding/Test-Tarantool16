@@ -3,10 +3,10 @@ use strict;
 use warnings FATAL => 'all';
 use ExtUtils::MakeMaker;
 
-unless ($^O eq 'linux') {
-    warn "This is Linux only software\n";
-    exit 0;
-}
+# unless ($^O eq 'linux') {
+#     warn "This is Linux only software\n";
+#     exit 0;
+# }
 
 my $preop =
     'perldoc -uT $(VERSION_FROM) | tee $(DISTVNAME)/README.pod > README.pod;' .

@@ -4,7 +4,7 @@ Test::Tarantool16 - The Swiss army knife for tests of Tarantool 1.6 related Perl
 
 =head1 VERSION
 
-Version 0.031
+Version 0.032
 
 
 =cut
