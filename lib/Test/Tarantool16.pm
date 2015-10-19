@@ -467,6 +467,7 @@ sub _process_check {
 	for my $p ( @{$t->table} ){
 		if ($p->pid == $self->{pid}) {
 			my $ps = $p->cmndline;
+			warn "Tarantool status check: pid=$self->{pid} cmdline=$ps";
 			if ($ps =~ /$status/) {
 				return 1, "OK";
 			}
