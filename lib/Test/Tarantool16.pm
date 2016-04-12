@@ -18,11 +18,11 @@ Test::Tarantool16 - The Swiss army knife for tests of Tarantool 1.6 related Perl
 
 =head1 VERSION
 
-Version 0.032
+Version 0.033
 
 =cut
 
-our $VERSION = '0.032';
+our $VERSION = '0.033';
 our $Count = 0;
 our %Schedule;
 
@@ -273,7 +273,6 @@ sub start {
 		open(STDERR, ">&", $cw) or die "Could not dup filehandle: $!";
 		my $file = File::Spec->rel2abs("./evtnt.lua");
 		$self->{tarantool_cmd} =~ s/%\{([^{}]+)\}/$file/;
-		# warn Dumper $self->{tarantool_cmd};
 		exec($self->{tarantool_cmd});
 		die "exec: $!";
 	}
@@ -411,7 +410,7 @@ sub admin_cmd {
 			});
 		},
 		on_connect_error => sub {
-			warn "Connection error: $_[1]";
+			$self->{logger}->("Connection error: $_[1]");
 			$_[0]->on_read(undef);
 			$_[0]->destroy();
 			delete $self->{afh};
@@ -467,7 +466,7 @@ sub _process_check {
 	for my $p ( @{$t->table} ){
 		if ($p->pid == $self->{pid}) {
 			my $ps = $p->cmndline;
-			warn "Tarantool status check: pid=$self->{pid} cmdline=$ps";
+			$self->{logger}->("Tarantool status check: pid=$self->{pid} cmdline=$ps");
 			if ($ps =~ /$status/) {
 				return 1, "OK";
 			}
@@ -491,10 +490,10 @@ sub DESTROY {
 	return unless $Schedule{$self};
 	kill TERM => $self->{pid} if $self->{pid};
 	if ($self->{cleanup}) {
-		rmtree($self->{root}) or warn "Couldn't remove folder $self->{root}: $!";
+		rmtree($self->{root}) or $self->{logger}->("Couldn't remove folder $self->{root}: $!");
 	}
 	delete $Schedule{$self};
-	warn "$self->{title} destroyed\n";
+	$self->{logger}->("$self->{title} destroyed\n");
 }
 
 END {
