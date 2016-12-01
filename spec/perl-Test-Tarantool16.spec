@@ -90,7 +90,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,-)
 %doc META.json
 %{perl_vendorlib}/*
-#%{_mandir}/man3/*
+%{_mandir}/man3/*
 
 %changelog
 * Fri Aug 28 2015 Maxim Polyakov 0.01-1
